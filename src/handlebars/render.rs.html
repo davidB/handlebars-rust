@@ -1089,6 +1089,21 @@
 <span id="1089">1089</span>
 <span id="1090">1090</span>
 <span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Borrow</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">VecDeque</span>;
@@ -1324,6 +1339,7 @@
         <span class="self">self</span>.<span class="ident">block_mut</span>().<span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>;
     }
 
+    <span class="attribute">#[<span class="ident">deprecated</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">concat_path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path_seg</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">context</span>::<span class="ident">get_in_block_params</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">block_context</span>, <span class="ident">path_seg</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">BlockParamHolder</span>::<span class="ident">Path</span>(<span class="ident">paths</span>)) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">paths</span>.<span class="ident">join</span>(<span class="string">&quot;/&quot;</span>)),
@@ -1484,6 +1500,11 @@
     <span class="doccomment">/// Returns if the helper is a block one `{{#helper}}{{/helper}}` or not `{{helper 123}}`</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">block</span>
+    }
+
+    <span class="doccomment">/// Returns if the helper has either a block param or block param pair</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_block_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">block_param</span>.<span class="ident">is_some</span>()
     }
 
     <span class="doccomment">/// Returns block param if any</span>
@@ -1661,7 +1682,7 @@
         <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;rc</span> <span class="ident">Context</span>,
         <span class="ident">rc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RenderContext</span><span class="op">&lt;</span><span class="lifetime">&#39;reg</span><span class="op">&gt;</span>,
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathAndJson</span><span class="op">&lt;</span><span class="lifetime">&#39;reg</span>, <span class="lifetime">&#39;rc</span><span class="op">&gt;</span>, <span class="ident">RenderError</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Parameter</span>::<span class="ident">Name</span>(<span class="kw-2">ref</span> <span class="ident">name</span>) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">rc</span>.<span class="ident">get_local_var</span>(<span class="ident">name</span>) {
                     <span class="comment">// local var, @first, @last for example</span>
@@ -1682,11 +1703,20 @@
                         <span class="ident">ScopedJson</span>::<span class="ident">Derived</span>(<span class="ident">json</span>.<span class="ident">as_json</span>().<span class="ident">clone</span>()),
                     ))
                 } <span class="kw">else</span> {
-                    <span class="comment">// failback to normal evaluation</span>
-                    <span class="prelude-val">Ok</span>(<span class="ident">PathAndJson</span>::<span class="ident">new</span>(
-                        <span class="prelude-val">Some</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>()),
-                        <span class="ident">rc</span>.<span class="ident">evaluate</span>(<span class="ident">ctx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>,
-                    ))
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">rc</span>.<span class="ident">evaluate</span>(<span class="ident">ctx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">block_context_path</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">block_context_path</span>() {
+                        <span class="prelude-val">Ok</span>(<span class="ident">PathAndJson</span>::<span class="ident">new_absolute</span>(
+                            <span class="prelude-val">Some</span>(<span class="ident">block_context_path</span>.<span class="ident">to_string</span>()),
+                            <span class="ident">value</span>,
+                        ))
+                    } <span class="kw">else</span> {
+                        <span class="kw">match</span> <span class="ident">value</span> {
+                            <span class="comment">// when evaluate result is a derived json, it indicates the</span>
+                            <span class="comment">// value is a block context value</span>
+                            <span class="ident">ScopedJson</span>::<span class="ident">Derived</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">PathAndJson</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>, <span class="ident">value</span>)),
+                            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">PathAndJson</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>()), <span class="ident">value</span>)),
+                        }
+                    }
                 }
             }
             <span class="ident">Parameter</span>::<span class="ident">Literal</span>(<span class="kw-2">ref</span> <span class="ident">j</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">PathAndJson</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>, <span class="ident">ScopedJson</span>::<span class="ident">Constant</span>(<span class="ident">j</span>))),
@@ -2122,7 +2152,7 @@
         .<span class="ident">register_template_string</span>(<span class="string">&quot;t&quot;</span>, <span class="string">&quot;{{#each .}}{{@key}}: {{this}}\n{{/each}}&quot;</span>)
         .<span class="ident">is_ok</span>());
 
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">render</span>(<span class="string">&quot;t&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">json</span><span class="macro">!</span>({<span class="string">&quot;/foo&quot;</span>: <span class="string">&quot;bar&quot;</span>})).<span class="ident">expect</span>(<span class="string">&quot;should work&quot;</span>);
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">render</span>(<span class="string">&quot;t&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">json</span><span class="macro">!</span>({<span class="string">&quot;/foo&quot;</span>: <span class="string">&quot;bar&quot;</span>})).<span class="ident">unwrap</span>();
 
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">r</span>, <span class="string">&quot;/foo: bar\n&quot;</span>);
 }
